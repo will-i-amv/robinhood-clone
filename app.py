@@ -45,9 +45,12 @@ url = (
     "https://pkgstore.datahub.io/core/nasdaq-listings/nasdaq-listed_csv/" + 
     "data/7665719fb51081ba0bd834fde71ce822/nasdaq-listed_csv.csv"
 )
-data = requests.get(url).content
-df_data = pd.read_csv(io.StringIO(data.decode("utf-8")))
-STOCK_SYMBOLS = df_data["Symbol"].to_list()
+STOCK_SYMBOLS = (
+    pd
+    .read_csv(url)
+    .loc[:, "Symbol"]
+    .to_list()
+)
 
 
 @app.before_request
