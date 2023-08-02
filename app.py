@@ -27,18 +27,16 @@ request_payment = requests.Session()
 request_payment.auth = (RAZORPAY_ID, RAZORPAY_PASSWD)
 payment_data = json.load(open("payment_data.json"))
 
-# Path to database
-DB_PATH = "app.db"
-
 # App configuration
 app = Flask(__name__, template_folder=os.path.abspath("./templates"))
 app.secret_key = "somekey"
 app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
 
 # Create tables
-users.create_user(DB_PATH)
-contactus.create_tbl(DB_PATH)
-stock.make_tbl(DB_PATH)
+DB_PATH = "app.db"
+users.create_table(DB_PATH)
+contactus.create_table(DB_PATH)
+stock.create_table(DB_PATH)
 
 # List of stock symbols from URL containing NASDAQ listings
 url = (
