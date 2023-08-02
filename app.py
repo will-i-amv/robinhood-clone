@@ -80,10 +80,10 @@ def home():
 
     # Store input if a post request is made
     if request.method == "POST":
-        name = request.form["name"]
-        email = request.form["email"]
-        password = request.form["password"]
-        repeat_password = request.form["rpassword"]
+        name = request.form.get('name', '')
+        email = request.form.get('email', '')
+        password = request.form.get('password', '')
+        repeat_password = request.form.get('rpassword', '')
 
         if password and not repeat_password:
             if users.check_user_exist(DB_PATH, email):
