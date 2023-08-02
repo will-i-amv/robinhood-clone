@@ -225,26 +225,6 @@ def inv():
     return redirect("/")
 
 
-@app.route("/about")
-def about():
-    """
-    About Us Page
-    """
-    if g.user:
-        return render_template("about.html")
-    return redirect("/")
-
-
-@app.route("/doc")
-def doc():
-    """
-    Trading Guide Page
-    """
-    if g.user:
-        return render_template("doc.html")
-    return redirect("/")
-
-
 @app.route("/trade", methods=["GET", "POST"])
 def trade():
     """
@@ -403,6 +383,26 @@ def trade():
                     )
 
         return render_template("trade.html", transactions=transactions)
+    return redirect("/")
+
+
+@app.route("/about")
+def about():
+    """
+    About Us Page
+    """
+    if g.user:
+        return render_template("about.html")
+    return redirect("/")
+
+
+@app.route("/doc")
+def doc():
+    """
+    Trading Guide Page
+    """
+    if g.user:
+        return render_template("doc.html")
     return redirect("/")
 
 
