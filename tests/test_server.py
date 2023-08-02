@@ -25,7 +25,7 @@ class TestServer(unittest.TestCase):
         try:
             url = str.__add__(
                 "http://data.fixer.io/api/latest?access_key=",
-                os.getenv("CURRENCY_ACCESS_KEY"),
+                os.getenv("FIXER_API_KEY"),
             )
         except Exception as e:
             return (False, str(e))

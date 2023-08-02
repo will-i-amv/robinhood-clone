@@ -19,27 +19,26 @@ from utils import Currency_Conversion, get_current_stock_price, reset_password
 
 # Import environment variables
 load_dotenv()
-key_id = os.getenv("KEY_ID")
-key_secret = os.getenv("KEY_SECRET")
+RAZORPAY_ID = os.getenv("RAZORPAY_ID")
+RAZORPAY_PASSWD = os.getenv("RAZORPAY_PASSWD")
 
 # Initialize Payment Session
 request_payment = requests.Session()
-request_payment.auth = (key_id, key_secret)
+request_payment.auth = (RAZORPAY_ID, RAZORPAY_PASSWD)
 payment_data = json.load(open("payment_data.json"))
 
 # Path to database
-path = "app.db"
+DB_PATH = "app.db"
 
 # App configuration
-templates_path = os.path.abspath("./templates")
-app = Flask(__name__, template_folder=templates_path)
+app = Flask(__name__, template_folder=os.path.abspath("./templates"))
 app.secret_key = "somekey"
 app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
 
 # Create tables
-users.create_user(path)
-contactus.create_tbl(path)
-stock.make_tbl(path)
+users.create_user(DB_PATH)
+contactus.create_tbl(DB_PATH)
+stock.make_tbl(DB_PATH)
 
 # List of stock symbols from URL containing NASDAQ listings
 url = (
@@ -48,7 +47,7 @@ url = (
 )
 data = requests.get(url).content
 df_data = pd.read_csv(io.StringIO(data.decode("utf-8")))
-symbols = df_data["Symbol"].to_list()
+STOCK_SYMBOLS = df_data["Symbol"].to_list()
 
 
 @app.before_request
@@ -59,7 +58,7 @@ def security():
     """
     g.user = None
     if "user_email" in session:
-        emails = users.getemail(path)
+        emails = users.getemail(DB_PATH)
         try:
             useremail = [
                 email for email in emails if email[0] == session["user_email"]
@@ -86,8 +85,8 @@ def home():
         repeat_password = request.form["rpassword"]
 
         if password and not repeat_password:
-            if users.check_user_exist(path, email):
-                if users.check_hash(path, password, email):
+            if users.check_user_exist(DB_PATH, email):
+                if users.check_hash(DB_PATH, password, email):
                     session["user_email"] = email
                     return redirect("/index")
                 else:
@@ -99,10 +98,10 @@ def home():
                 return render_template("login.html", error="User Doesnt Exist")
 
         if password and repeat_password:
-            if not users.check_user_exist(path, email):
+            if not users.check_user_exist(DB_PATH, email):
                 if password == repeat_password:
                     password = users.hash_pwd(password)
-                    users.insert(path, "user", (email, name, password, 0))
+                    users.insert(DB_PATH, "user", (email, name, password, 0))
                     session["user_email"] = email
                     return render_template(
                         "login.html", error="Sign Up Complete - Login"
@@ -117,8 +116,8 @@ def home():
                 )
 
         if not name and not password and email:
-            if users.check_user_exist(path, email):
-                reset_password(path, email)
+            if users.check_user_exist(DB_PATH, email):
+                reset_password(DB_PATH, email)
                 return render_template(
                     "login.html",
                     error="We have sent you a link to reset your password. Check your mailbox",
@@ -158,10 +157,10 @@ def reset():
 
         if pwd and repeat_pwd and ver_code:
             if pwd == repeat_pwd:
-                if users.check_code(path, ver_code):
+                if users.check_code(DB_PATH, ver_code):
                     pwd = users.hash_pwd(pwd)
-                    users.reset_pwd(path, pwd, ver_code)
-                    users.reset_code(path, ver_code)
+                    users.reset_pwd(DB_PATH, pwd, ver_code)
+                    users.reset_code(DB_PATH, ver_code)
                     return redirect("/")
                 else:
                     return render_template(
@@ -184,7 +183,7 @@ def inv():
             stock_id = request.form["stocksym"]
             stock_id = stock_id.upper()
 
-            if stock_id in symbols:
+            if stock_id in STOCK_SYMBOLS:
                 df_stock = yf.download(stock_id, start="1950-01-01", period="1d")
 
             else:
@@ -208,8 +207,7 @@ def inv():
             if len(files) != 0:
                 file_rem = Path(files[0]).name
                 location = "/home/nvombat/Desktop/Investment-WebApp/analysis/data/"
-                path = os.path.join(location, file_rem)
-                os.remove(path)
+                os.remove(os.path.join(location, file_rem))
 
             df_stock.to_json(
                 "/home/nvombat/Desktop/Investment-WebApp/analysis/data/"
@@ -230,12 +228,12 @@ def trade():
     """
     if g.user:
         user_email = g.user
-        transactions = stock.query(user_email[0], path)
+        transactions = stock.query(user_email[0], DB_PATH)
 
         if request.method == "POST":
             url = str.__add__(
                 "http://data.fixer.io/api/latest?access_key=",
-                os.getenv("CURRENCY_ACCESS_KEY"),
+                os.getenv("FIXER_API_KEY"),
             )
             c = Currency_Conversion(url)
             from_country = "USD"
@@ -247,7 +245,7 @@ def trade():
                 quant = request.form["amount"]
 
                 symb = symb.upper()
-                if symb in symbols:
+                if symb in STOCK_SYMBOLS:
                     date = d.datetime.now()
                     date = date.strftime("%m/%d/%Y, %H:%M:%S")
 
@@ -267,7 +265,7 @@ def trade():
                     # ref_id = binascii.b2a_hex(os.urandom(20))
                     # payment_data["amount"] = stock_price_int
                     # payment_data["reference_id"] = ref_id.decode()
-                    # payment_data["customer"]["name"] = users.getname(path, g.user)
+                    # payment_data["customer"]["name"] = users.getname(DB_PATH, g.user)
                     # payment_data["customer"]["email"] = user_email[0]
 
                     # payment_link_init = request_payment.post(
@@ -280,11 +278,11 @@ def trade():
                     # return redirect(payment_link, code=303)
 
                     stock.buy(
-                        "stock", (date, symb, stock_price, quant, user_email[0]), path
+                        "stock", (date, symb, stock_price, quant, user_email[0]), DB_PATH
                     )
 
                     data = (symb, stock_price, quant, total, user_email[0], date)
-                    send_buy(path, data)
+                    send_buy(DB_PATH, data)
 
                     return redirect(url_for("trade"))
 
@@ -301,7 +299,7 @@ def trade():
                 quant = request.form["amount"]
                 symb = symb.upper()
 
-                if symb in symbols:
+                if symb in STOCK_SYMBOLS:
                     quant = int(quant)
                     stock_price = get_current_stock_price(symb)
                     total = quant * stock_price
@@ -312,7 +310,7 @@ def trade():
                     date = date.strftime("%m/%d/%Y, %H:%M:%S")
                     data = (symb, quant, user_email[0], stock_price)
 
-                    if stock.sell("stock", data, path):
+                    if stock.sell("stock", data, DB_PATH):
                         mail_data = (
                             symb,
                             stock_price,
@@ -321,7 +319,7 @@ def trade():
                             user_email[0],
                             date,
                         )
-                        send_sell(path, mail_data)
+                        send_sell(DB_PATH, mail_data)
                         return redirect(url_for("trade"))
 
                     else:
@@ -344,7 +342,7 @@ def trade():
                 quant = request.form["amount"]
                 sym = sym.upper()
 
-                if sym in symbols:
+                if sym in STOCK_SYMBOLS:
                     quant = int(quant)
                     price = get_current_stock_price(sym)
                     price = float(price)
@@ -417,8 +415,8 @@ def contact():
             user_email = g.user
             curr_user = user_email[0]
 
-            if users.check_contact_us(path, email, curr_user):
-                contactus.insert(email, msg, path)
+            if users.check_contact_us(DB_PATH, email, curr_user):
+                contactus.insert(email, msg, DB_PATH)
                 return render_template(
                     "contact.html", error="Thank you, We will get back to you shortly"
                 )
