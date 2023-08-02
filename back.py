@@ -14,7 +14,8 @@ from dotenv import load_dotenv
 from flask import Flask, g, redirect, render_template, request, session, url_for
 
 from models import contactus, stock, users
-from sendmail import send_buy, send_mail, send_sell
+from sendmail import send_buy, send_sell
+from utils import State, Currency_Conversion, get_current_stock_price, reset_password
 
 
 # Import environment variables
@@ -22,24 +23,14 @@ load_dotenv()
 key_id = os.getenv("KEY_ID")
 key_secret = os.getenv("KEY_SECRET")
 
-
 # Initialize Payment Session
 request_payment = requests.Session()
 request_payment.auth = (key_id, key_secret)
 payment_data = json.load(open("payment_data.json"))
 
-
 # Path to database
 path = "app.db"
-
-
-# To pass data from one page to another
-class state:
-    ...
-
-
-s = state()
-
+s = State()
 
 # App configuration
 templates_path = os.path.abspath("./templates")
@@ -47,73 +38,16 @@ app = Flask(__name__, template_folder=templates_path)
 app.secret_key = "somekey"
 app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
 
-
 # Create tables
 users.create_user(path)
 contactus.create_tbl(path)
 stock.make_tbl(path)
 
-
-def get_current_price(symbol: str) -> float:
-    """Gets current closing price of stock using Ticker method
-
-    Args:
-        symbol: Stock Symbol
-
-    Returns:
-        float: Closing Stock price
-    """
-    ticker = yf.Ticker(symbol)
-    todays_data = ticker.history(period="1d")
-    return float(todays_data["Close"][0])
-
-
-def get_current_stock_price(symbol: str) -> float:
-    """Gets current closing price of stock
-    (Substitute for init function error)
-
-    Args:
-        symbol: Stock Symbol
-
-    Returns:
-        float: Closing Stock price
-    """
-    data = pn.data.get(symbol, start=None, end=None)
-    return float(data["Close"][0])
-
-
-class Currency_Conversion:
-    """
-    API Class for currency conversion
-    """
-
-    rates = {}
-
-    def __init__(self, url):
-        data = requests.get(url).json()
-        self.rates = data["rates"]
-
-    def convert(self, from_currency, to_currency, amount) -> float:
-        """Converts one currency to another
-
-        Args:
-            from_currency: Currency to be converted from
-            to_cuurency: Currency to be converted to
-            amount: amount to be converted
-
-        Returns:
-            float: Converted amount
-        """
-        initial_amount = amount
-        if from_currency != "EUR":
-            amount = amount / self.rates[from_currency]
-
-        amount = round(amount * self.rates[to_currency], 2)
-        return amount
-
-
 # List of stock symbols from URL containing NASDAQ listings
-url = "https://pkgstore.datahub.io/core/nasdaq-listings/nasdaq-listed_csv/data/7665719fb51081ba0bd834fde71ce822/nasdaq-listed_csv.csv"
+url = (
+    "https://pkgstore.datahub.io/core/nasdaq-listings/nasdaq-listed_csv/" + 
+    "data/7665719fb51081ba0bd834fde71ce822/nasdaq-listed_csv.csv"
+)
 data = requests.get(url).content
 df_data = pd.read_csv(io.StringIO(data.decode("utf-8")))
 symbols = df_data["Symbol"].to_list()
@@ -208,13 +142,6 @@ def index():
     if g.user:
         return render_template("index.html")
     return redirect("/")
-
-
-def reset_password(path: str, email: str):
-    """
-    Sends mail for resetting password to user
-    """
-    send_mail(path, email)
 
 
 @app.route("/reset", methods=["GET", "POST"])
