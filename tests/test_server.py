@@ -1,7 +1,7 @@
 import os
 import unittest
 
-from back import Currency_Conversion, get_current_stock_price
+from utils import Currency_Conversion, get_current_stock_price
 from dotenv import load_dotenv
 
 from . import Base
