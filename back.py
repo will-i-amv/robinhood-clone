@@ -11,11 +11,11 @@ import pynance as pn
 import requests
 import yfinance as yf
 from dotenv import load_dotenv
-from flask import (Flask, g, redirect, render_template, request, session,
-                   url_for)
+from flask import Flask, g, redirect, render_template, request, session, url_for
 
 from models import contactus, stock, users
 from sendmail import send_buy, send_mail, send_sell
+
 
 # Import environment variables
 load_dotenv()
