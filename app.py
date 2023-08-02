@@ -7,7 +7,6 @@ import os
 from pathlib import Path
 
 import pandas as pd
-import pynance as pn
 import requests
 import yfinance as yf
 from dotenv import load_dotenv
@@ -15,7 +14,7 @@ from flask import Flask, g, redirect, render_template, request, session, url_for
 
 from models import contactus, stock, users
 from sendmail import send_buy, send_sell
-from utils import State, Currency_Conversion, get_current_stock_price, reset_password
+from utils import Currency_Conversion, get_current_stock_price, reset_password
 
 
 # Import environment variables
@@ -30,7 +29,6 @@ payment_data = json.load(open("payment_data.json"))
 
 # Path to database
 path = "app.db"
-s = State()
 
 # App configuration
 templates_path = os.path.abspath("./templates")

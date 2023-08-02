@@ -5,11 +5,6 @@ import yfinance as yf
 from sendmail import send_mail 
 
 
-# To pass data from one page to another
-class State:
-    pass
-
-
 class Currency_Conversion:
     """
     API Class for currency conversion
