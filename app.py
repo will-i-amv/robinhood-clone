@@ -1,7 +1,6 @@
 # Imports
-import datetime as d
+import datetime as dt
 import glob
-import io
 import json
 import os
 from pathlib import Path
@@ -197,7 +196,7 @@ def inv():
             df_stock.reset_index(inplace=True)
             df_stock["Date"] = pd.to_datetime(df_stock["Date"])
             df_stock["Date"] = (
-                df_stock["Date"] - d.datetime(1970, 1, 1)
+                df_stock["Date"] - dt.datetime(1970, 1, 1)
             ).dt.total_seconds()
             df_stock["Date"] = df_stock["Date"] * 1000
 
@@ -247,7 +246,7 @@ def trade():
 
                 symb = symb.upper()
                 if symb in STOCK_SYMBOLS:
-                    date = d.datetime.now()
+                    date = dt.datetime.now()
                     date = date.strftime("%m/%d/%Y, %H:%M:%S")
 
                     quant = int(quant)
@@ -307,7 +306,7 @@ def trade():
                     stock_price = "{:.2f}".format(stock_price)
                     total = "{:.2f}".format(total)
 
-                    date = d.datetime.now()
+                    date = dt.datetime.now()
                     date = date.strftime("%m/%d/%Y, %H:%M:%S")
                     data = (symb, quant, user_email[0], stock_price)
 
