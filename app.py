@@ -81,20 +81,29 @@ def login():
     else:
         email = request.form.get('email', '')
         password = request.form.get('password', '')
-        if users.check_user_exist(DB_PATH, email):
-            if users.check_hash(DB_PATH, password, email):
-                session["user_email"] = email
-                return redirect("/index")
-            else:
-                return render_template(
+        if not email:
+            return render_template(
                     "login.html", 
-                    error="Incorrect Email or Password"
+                    error="You must provide email"
                 )
-        else:
+        elif not password:
+            return render_template(
+                    "login.html", 
+                    error="You must provide password"
+                )
+        elif not users.check_user_exist(DB_PATH, email):
             return render_template(
                 "login.html", 
-                error="User Doesnt Exist"
+                error="User does not exist"
             )
+        elif not users.check_hash(DB_PATH, password, email):
+            return render_template(
+                "login.html", 
+                error="Password incorrect"
+            )
+        else:
+            session["user_email"] = email
+            return redirect("/index")
 
 
 @app.route("/register", methods=["GET", "POST"])
