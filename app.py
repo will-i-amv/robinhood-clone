@@ -70,65 +70,77 @@ def security():
 
 @app.route("/", methods=["GET", "POST"])
 def home():
-    """
-    Login Page
-    """
-    session.pop("user_email", None)
+    return redirect("/login")
 
-    flag = True
 
-    # Store input if a post request is made
-    if request.method == "POST":
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    session.clear()
+    if not request.method == "POST":
+        return render_template("login.html")
+    else:
+        email = request.form.get('email', '')
+        password = request.form.get('password', '')
+        if users.check_user_exist(DB_PATH, email):
+            if users.check_hash(DB_PATH, password, email):
+                session["user_email"] = email
+                return redirect("/index")
+            else:
+                return render_template(
+                    "login.html", 
+                    error="Incorrect Email or Password"
+                )
+        else:
+            return render_template(
+                "login.html", 
+                error="User Doesnt Exist"
+            )
+
+
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    if not request.method == "POST":
+        return render_template("register.html")
+    else:
         name = request.form.get('name', '')
         email = request.form.get('email', '')
         password = request.form.get('password', '')
         repeat_password = request.form.get('rpassword', '')
-
-        if password and not repeat_password:
-            if users.check_user_exist(DB_PATH, email):
-                if users.check_hash(DB_PATH, password, email):
-                    session["user_email"] = email
-                    return redirect("/index")
-                else:
-                    flag = False
-                    return render_template(
-                        "login.html", error="Incorrect Email or Password"
-                    )
-            else:
-                return render_template("login.html", error="User Doesnt Exist")
-
-        if password and repeat_password:
-            if not users.check_user_exist(DB_PATH, email):
-                if password == repeat_password:
-                    password = users.hash_pwd(password)
-                    users.insert(DB_PATH, "user", (email, name, password, 0))
-                    session["user_email"] = email
-                    return render_template(
-                        "login.html", error="Sign Up Complete - Login"
-                    )
-                else:
-                    return render_template(
-                        "login.html", error="Password & Retyped Password Not Same"
-                    )
+        if not users.check_user_exist(DB_PATH, email):
+            if password == repeat_password:
+                password = users.hash_pwd(password)
+                users.insert(DB_PATH, "user", (email, name, password, 0))
+                session["user_email"] = email
+                return redirect("/index")
             else:
                 return render_template(
-                    "login.html", error="This User Already Exists! Try Again"
+                    "login.html", 
+                    error="Password & Retyped Password Not Same"
                 )
+        else:
+            return render_template(
+                "login.html", 
+                error="This User Already Exists! Try Again"
+            )
 
-        if not name and not password and email:
-            if users.check_user_exist(DB_PATH, email):
-                reset_password(DB_PATH, email)
-                return render_template(
-                    "login.html",
-                    error="We have sent you a link to reset your password. Check your mailbox",
-                )
-            else:
-                return render_template(
-                    "login.html", error="This Email Doesnt Exist - Please Sign Up"
-                )
 
-    if flag:
-        return render_template("login.html")
+@app.route("/recovery", methods=["GET", "POST"])
+def recovery():
+    if not request.method == "POST":
+        return render_template("recovery.html")
+    else:
+        email = request.form.get('email', '')
+        if users.check_user_exist(DB_PATH, email):
+            reset_password(DB_PATH, email)
+            return render_template(
+                "login.html",
+                error="We have sent you a link to reset your password. Check your mailbox",
+            )
+        else:
+            return render_template(
+                "login.html", 
+                error="This Email Doesnt Exist - Please Sign Up"
+            )
 
 
 @app.route("/index", methods=["GET", "POST"])
