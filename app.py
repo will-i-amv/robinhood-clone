@@ -115,22 +115,36 @@ def register():
         email = request.form.get('email', '')
         password = request.form.get('password', '')
         repeat_password = request.form.get('rpassword', '')
-        if not users.check_user_exist(DB_PATH, email):
-            if password == repeat_password:
-                password = users.hash_pwd(password)
-                users.insert(DB_PATH, "user", (email, name, password, 0))
-                session["user_email"] = email
-                return redirect("/index")
-            else:
-                return render_template(
-                    "login.html", 
-                    error="Password & Retyped Password Not Same"
-                )
-        else:
+        if not name:
             return render_template(
-                "login.html", 
-                error="This User Already Exists! Try Again"
+                    "register.html", 
+                    error="You must provide name"
+                )
+        if not email:
+            return render_template(
+                    "register.html", 
+                    error="You must provide email"
+                )
+        elif not password:
+            return render_template(
+                    "register.html", 
+                    error="You must provide password"
+                )
+        elif password != repeat_password:
+            return render_template(
+                "register.html", 
+                error="The passwords do not match"
             )
+        elif users.check_user_exist(DB_PATH, email):
+            return render_template(
+                "register.html", 
+                error="The user already exists"
+            )
+        else:
+            password = users.hash_pwd(password)
+            users.insert(DB_PATH, "user", (email, name, password, 0))
+            session["user_email"] = email
+            return redirect("/index")
 
 
 @app.route("/recovery", methods=["GET", "POST"])
@@ -150,16 +164,6 @@ def recovery():
                 "login.html", 
                 error="This Email Doesnt Exist - Please Sign Up"
             )
-
-
-@app.route("/index", methods=["GET", "POST"])
-def index():
-    """
-    Home Page
-    """
-    if g.user:
-        return render_template("index.html")
-    return redirect("/")
 
 
 @app.route("/reset", methods=["GET", "POST"])
@@ -192,6 +196,16 @@ def reset():
                     "reset.html", error="Password & Retyped Password Not Same"
                 )
     return render_template("reset.html")
+
+
+@app.route("/index", methods=["GET", "POST"])
+def index():
+    """
+    Home Page
+    """
+    if g.user:
+        return render_template("index.html")
+    return redirect("/")
 
 
 @app.route("/inv", methods=["GET", "POST"])
