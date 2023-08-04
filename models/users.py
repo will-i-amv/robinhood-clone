@@ -6,7 +6,7 @@ import sqlite3 as s
 from typing import Tuple
 
 
-def create_user(path: str) -> None:
+def create_table(path: str) -> None:
     """Creates user table in the database
 
     Args:
@@ -267,7 +267,7 @@ def check_hash(path: str, pwd: str, email: str) -> bool:
 
 if __name__ == "__main__":
     test_path = "../test.db"
-    create_user(test_path)
+    create_table(test_path)
     insert(test_path, "user", ("test2@gmail.com", "Karan", "test456", 1111))
     add_code(test_path, 1234, "test@gmail.com")
     reset_pwd(test_path, "test456", 1111)

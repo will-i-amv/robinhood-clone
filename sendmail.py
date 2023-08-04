@@ -18,11 +18,11 @@ def send_mail(path: str, email: str) -> None:
         None
     """
     MAILGUN_EMAIL = os.getenv("MAILGUN_EMAIL")
-    MAILGUN_PWD = os.getenv("MAILGUN_PWD")
+    MAILGUN_PASSWD = os.getenv("MAILGUN_PASSWD")
 
     try:
         server = smtplib.SMTP("smtp.mailgun.org", 587)
-        server.login(MAILGUN_EMAIL, MAILGUN_PWD)
+        server.login(MAILGUN_EMAIL, MAILGUN_PASSWD)
     except:
         print("Error Connecting To Mail Server")
 
@@ -60,11 +60,11 @@ def send_buy(path: str, data: tuple) -> None:
         None
     """
     MAILGUN_EMAIL = os.getenv("MAILGUN_EMAIL")
-    MAILGUN_PWD = os.getenv("MAILGUN_PWD")
+    MAILGUN_PASSWD = os.getenv("MAILGUN_PASSWD")
 
     try:
         server = smtplib.SMTP("smtp.mailgun.org", 587)
-        server.login(MAILGUN_EMAIL, MAILGUN_PWD)
+        server.login(MAILGUN_EMAIL, MAILGUN_PASSWD)
     except:
         print("Error Connecting To Mail Server")
 
@@ -97,11 +97,11 @@ def send_sell(path: str, data: tuple) -> None:
         None
     """
     MAILGUN_EMAIL = os.getenv("MAILGUN_EMAIL")
-    MAILGUN_PWD = os.getenv("MAILGUN_PWD")
+    MAILGUN_PASSWD = os.getenv("MAILGUN_PASSWD")
 
     try:
         server = smtplib.SMTP("smtp.mailgun.org", 587)
-        server.login(MAILGUN_EMAIL, MAILGUN_PWD)
+        server.login(MAILGUN_EMAIL, MAILGUN_PASSWD)
     except:
         print("Error Connecting To Mail Server")
 

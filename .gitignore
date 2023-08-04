@@ -14,6 +14,7 @@ dist/
 downloads/
 eggs/
 .eggs/
+images/
 lib/
 lib64/
 parts/
@@ -100,9 +101,8 @@ celerybeat.pid
 
 # SageMath parsed files
 *.sage.py
+
 # Environments
-.vscode
-.idea
 .env
 .venv
 env/
@@ -110,8 +110,6 @@ venv/
 ENV/
 env.bak/
 venv.bak/
-analysis/data/AAPL.csv
-analysis/data/AAPL.json
 
 # Spyder project settings
 .spyderproject
@@ -130,5 +128,16 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
 # Config stuff
 configuration.cfg
+
+# IDE config files
+.vscode
+.idea
+
+# OTHER
+*.png
+*.dot
+*.csv
+*.db

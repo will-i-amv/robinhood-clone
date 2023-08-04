@@ -12,7 +12,7 @@ df_data = pd.read_csv(io.StringIO(data.decode("utf-8")))
 symbols = df_data["Symbol"].to_list()
 
 
-def make_tbl(path: str) -> None:
+def create_table(path: str) -> None:
     """Creates the stock table in the database
 
     Args:
@@ -131,7 +131,7 @@ def query(email: str, path: str) -> list:
 
 if __name__ == "__main__":
     test_path = "../test.db"
-    print(make_tbl(test_path))
+    print(create_table(test_path))
     print(buy("stock", ("19-9-2000", "NVDI", 354.9, 1, "test@gmail.com"), test_path))
     print(buy("stock", ("23-7-2002", "AAPL", 162.4, 2, "test@gmail.com"), test_path))
     print(sell("stock", ("NVDI", 1, "test@gmail.com", 354.9), test_path))

@@ -1,7 +1,7 @@
 import sqlite3 as s
 
 
-def create_tbl(path: str) -> None:
+def create_table(path: str) -> None:
     """Creates the contact_us table in the database
 
     Args:
@@ -39,4 +39,4 @@ def insert(email: str, message: str, path: str) -> None:
 
 if __name__ == "__main__":
     test_path = "../test.db"
-    create_tbl(test_path)
+    create_table(test_path)
