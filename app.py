@@ -156,12 +156,12 @@ def recovery():
         if users.check_user_exist(DB_PATH, email):
             reset_password(DB_PATH, email)
             return render_template(
-                "login.html",
+                "recovery.html",
                 error="We have sent you a link to reset your password. Check your mailbox",
             )
         else:
             return render_template(
-                "login.html", 
+                "recovery.html", 
                 error="This Email Doesnt Exist - Please Sign Up"
             )
 
