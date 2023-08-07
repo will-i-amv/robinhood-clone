@@ -59,10 +59,7 @@ def check_user_exist(path: str, email: str) -> bool:
     cur.execute(chk)
     res = cur.fetchall()
 
-    if len(res) == 0:
-        return False
-    else:
-        return True
+    return True if res else False
 
 
 def reset_pwd(path: str, pwd: str, code: int) -> None:
@@ -116,17 +113,16 @@ def check_code(path: str, code: str) -> bool:
     conn = s.connect(path)
     cur = conn.cursor()
 
-    chk = f"SELECT * FROM user WHERE Code='{code}'"
+    chk = f"SELECT Code FROM user WHERE Code='{code}'"
     cur.execute(chk)
     res = cur.fetchall()
-
-    if len(res) == 0:
-        return False
-    else:
-        if res[0][3] == code:
-            return True
-        else:
-            return False
+    
+    try:
+        stored_code = res[0][0]
+    except IndexError:
+        stored_code = ''
+    
+    return True if code == stored_code else False
 
 
 def reset_code(path: str, code: str) -> None:
