@@ -2,8 +2,6 @@ import pynance as pn
 import requests
 import yfinance as yf
 
-from sendmail import send_mail 
-
 
 class Currency_Conversion:
     """
