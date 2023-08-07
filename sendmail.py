@@ -20,7 +20,7 @@ def send_mail(path: str, email: str) -> None:
     MAILGUN_EMAIL = os.getenv("MAILGUN_EMAIL")
     MAILGUN_PASSWD = os.getenv("MAILGUN_PASSWD")
 
-    key = random.randint(1000, 9999)
+    key = str(random.randint(1000, 9999))
     add_code(path, key, email)
 
     url = "http://localhost:8000/reset"

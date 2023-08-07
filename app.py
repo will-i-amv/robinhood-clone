@@ -177,7 +177,7 @@ def reset():
     else:
         passwd = request.form["npassword"]
         repeat_passwd = request.form["rnpassword"]
-        ver_code = int(request.form["vcode"])
+        ver_code = str(request.form["vcode"])
 
         if passwd != repeat_passwd:
             return render_template(

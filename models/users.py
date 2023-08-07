@@ -18,7 +18,7 @@ def create_table(path: str) -> None:
     conn = s.connect(path)
     cur = conn.cursor()
 
-    tbl = "CREATE TABLE IF NOT EXISTS user(Email TEXT, Name TEXT, Password TEXT, Code INT)"
+    tbl = "CREATE TABLE IF NOT EXISTS user(Email TEXT, Name TEXT, Password TEXT, Code TEXT)"
     cur.execute(tbl)
     conn.commit()
 
@@ -84,7 +84,7 @@ def reset_pwd(path: str, pwd: str, code: int) -> None:
     conn.commit()
 
 
-def add_code(path: str, key: int, email: str) -> None:
+def add_code(path: str, key: str, email: str) -> None:
     """Adds verification code for user
 
     Args:
@@ -98,15 +98,12 @@ def add_code(path: str, key: int, email: str) -> None:
     conn = s.connect(path)
     cur = conn.cursor()
 
-    if isinstance(key, int):
-        cmnd = f"UPDATE user SET Code='{key}' WHERE Email='{email}'"
-        cur.execute(cmnd)
-        conn.commit()
-    else:
-        raise TypeError
+    cmnd = f"UPDATE user SET Code='{key}' WHERE Email='{email}'"
+    cur.execute(cmnd)
+    conn.commit()
 
 
-def check_code(path: str, code: int) -> bool:
+def check_code(path: str, code: str) -> bool:
     """Checks if verification code is valid
 
     Args:
@@ -119,23 +116,20 @@ def check_code(path: str, code: int) -> bool:
     conn = s.connect(path)
     cur = conn.cursor()
 
-    if isinstance(code, int):
-        chk = f"SELECT * FROM user WHERE Code='{code}'"
-        cur.execute(chk)
-        res = cur.fetchall()
+    chk = f"SELECT * FROM user WHERE Code='{code}'"
+    cur.execute(chk)
+    res = cur.fetchall()
 
-        if len(res) == 0:
-            return False
-        else:
-            if res[0][3] == code:
-                return True
-            else:
-                return False
+    if len(res) == 0:
+        return False
     else:
-        raise TypeError
+        if res[0][3] == code:
+            return True
+        else:
+            return False
 
 
-def reset_code(path: str, code: int) -> None:
+def reset_code(path: str, code: str) -> None:
     """Resets the Verification code to 0
 
     Args:
@@ -148,12 +142,9 @@ def reset_code(path: str, code: int) -> None:
     conn = s.connect(path)
     cur = conn.cursor()
 
-    if isinstance(code, int):
-        rstcd = f"UPDATE user SET Code=0 WHERE Code='{code}'"
-        cur.execute(rstcd)
-        conn.commit()
-    else:
-        raise TypeError
+    rstcd = f"UPDATE user SET Code='0' WHERE Code='{code}'"
+    cur.execute(rstcd)
+    conn.commit()
 
 
 def getname(path: str, email: tuple) -> str:
