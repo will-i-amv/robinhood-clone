@@ -3,6 +3,7 @@ import datetime as dt
 import glob
 import json
 import os
+import random
 from pathlib import Path
 
 import pandas as pd
@@ -12,8 +13,7 @@ from dotenv import load_dotenv
 from flask import Flask, g, redirect, render_template, request, session, url_for
 
 from models import contactus, stock, users
-from sendmail import send_buy, send_sell
-from utils import Currency_Conversion, get_current_stock_price, reset_password
+from utils import Currency_Conversion, get_current_stock_price, send_mail
 
 
 # Import environment variables
@@ -70,65 +70,151 @@ def security():
 
 @app.route("/", methods=["GET", "POST"])
 def home():
-    """
-    Login Page
-    """
-    session.pop("user_email", None)
+    return redirect("/login")
 
-    flag = True
 
-    # Store input if a post request is made
-    if request.method == "POST":
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    session.clear()
+    if not request.method == "POST":
+        return render_template("login.html")
+    else:
+        email = request.form.get('email', '')
+        password = request.form.get('password', '')
+        if not email:
+            return render_template(
+                    "login.html", 
+                    error="You must provide email"
+                )
+        elif not password:
+            return render_template(
+                    "login.html", 
+                    error="You must provide password"
+                )
+        elif not users.check_user_exist(DB_PATH, email):
+            return render_template(
+                "login.html", 
+                error="User does not exist"
+            )
+        elif not users.check_hash(DB_PATH, password, email):
+            return render_template(
+                "login.html", 
+                error="Password incorrect"
+            )
+        else:
+            session["user_email"] = email
+            return redirect("/index")
+
+
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    if not request.method == "POST":
+        return render_template("register.html")
+    else:
         name = request.form.get('name', '')
         email = request.form.get('email', '')
         password = request.form.get('password', '')
         repeat_password = request.form.get('rpassword', '')
-
-        if password and not repeat_password:
-            if users.check_user_exist(DB_PATH, email):
-                if users.check_hash(DB_PATH, password, email):
-                    session["user_email"] = email
-                    return redirect("/index")
-                else:
-                    flag = False
-                    return render_template(
-                        "login.html", error="Incorrect Email or Password"
-                    )
-            else:
-                return render_template("login.html", error="User Doesnt Exist")
-
-        if password and repeat_password:
-            if not users.check_user_exist(DB_PATH, email):
-                if password == repeat_password:
-                    password = users.hash_pwd(password)
-                    users.insert(DB_PATH, "user", (email, name, password, 0))
-                    session["user_email"] = email
-                    return render_template(
-                        "login.html", error="Sign Up Complete - Login"
-                    )
-                else:
-                    return render_template(
-                        "login.html", error="Password & Retyped Password Not Same"
-                    )
-            else:
-                return render_template(
-                    "login.html", error="This User Already Exists! Try Again"
+        if not name:
+            return render_template(
+                    "register.html", 
+                    error="You must provide name"
                 )
-
-        if not name and not password and email:
-            if users.check_user_exist(DB_PATH, email):
-                reset_password(DB_PATH, email)
-                return render_template(
-                    "login.html",
-                    error="We have sent you a link to reset your password. Check your mailbox",
+        if not email:
+            return render_template(
+                    "register.html", 
+                    error="You must provide email"
                 )
-            else:
-                return render_template(
-                    "login.html", error="This Email Doesnt Exist - Please Sign Up"
+        elif not password:
+            return render_template(
+                    "register.html", 
+                    error="You must provide password"
                 )
+        elif password != repeat_password:
+            return render_template(
+                "register.html", 
+                error="The passwords do not match"
+            )
+        elif users.check_user_exist(DB_PATH, email):
+            return render_template(
+                "register.html", 
+                error="The user already exists"
+            )
+        else:
+            password = users.hash_pwd(password)
+            users.insert(DB_PATH, "user", (email, name, password, 0))
+            session["user_email"] = email
+            return redirect("/index")
 
-    if flag:
-        return render_template("login.html")
+
+@app.route("/recovery", methods=["GET", "POST"])
+def recovery():
+    if not request.method == "POST":
+        return render_template("recovery.html")
+    else:
+        email = request.form.get('email', '')
+        if not users.check_user_exist(DB_PATH, email):
+            return render_template(
+                "recovery.html", 
+                error="The email does not exist."
+            )
+        else:
+            code = str(random.randint(1000, 9999))
+            subject = "RESET YOUR PASSWORD"
+            body = (
+                f"""
+                Dear User,
+
+                Please Click on the Link Below to reset your password for your {email} account.
+
+                This is your 4 Digit Verification Code: {code}
+
+                Link: http://localhost:8000/reset
+
+                If you didn't ask to reset your password please ignore this email.
+
+                Thank you.
+
+                Best Regards.
+                """
+                .replace('  ', '')
+            )
+            users.add_code(DB_PATH, code, email)
+            send_mail(email, subject, body)
+            
+            return render_template(
+                "recovery.html",
+                error="We have sent you a link to reset your password. Check your mailbox",
+            )
+
+
+@app.route("/reset", methods=["GET", "POST"])
+def reset():
+    """
+    Reset Password Page
+    """
+    if not request.method == "POST":
+        return render_template("reset.html")
+    else:
+        passwd = request.form["npassword"]
+        repeat_passwd = request.form["rnpassword"]
+        ver_code = str(request.form["vcode"])
+
+        if passwd != repeat_passwd:
+            return render_template(
+                "reset.html", 
+                error="The passwords do not match"
+            )
+        elif not users.check_code(DB_PATH, ver_code):
+            return render_template(
+                "reset.html", 
+                error="Incorrect verification code"
+            )
+        else:
+            passwd = users.hash_pwd(passwd)
+            users.reset_pwd(DB_PATH, passwd, ver_code)
+            users.reset_code(DB_PATH, ver_code)
+            return redirect("/")
 
 
 @app.route("/index", methods=["GET", "POST"])
@@ -139,38 +225,6 @@ def index():
     if g.user:
         return render_template("index.html")
     return redirect("/")
-
-
-@app.route("/reset", methods=["GET", "POST"])
-def reset():
-    """
-    Reset Password Page
-    """
-    if request.method == "POST":
-        pwd = request.form["npassword"]
-        repeat_pwd = request.form["rnpassword"]
-        ver_code = request.form["vcode"]
-        try:
-            ver_code = int(ver_code)
-        except:
-            raise TypeError
-
-        if pwd and repeat_pwd and ver_code:
-            if pwd == repeat_pwd:
-                if users.check_code(DB_PATH, ver_code):
-                    pwd = users.hash_pwd(pwd)
-                    users.reset_pwd(DB_PATH, pwd, ver_code)
-                    users.reset_code(DB_PATH, ver_code)
-                    return redirect("/")
-                else:
-                    return render_template(
-                        "reset.html", error="Incorrect Verification Code"
-                    )
-            else:
-                return render_template(
-                    "reset.html", error="Password & Retyped Password Not Same"
-                )
-    return render_template("reset.html")
 
 
 @app.route("/inv", methods=["GET", "POST"])
@@ -281,8 +335,24 @@ def trade():
                         "stock", (date, symb, stock_price, quant, user_email[0]), DB_PATH
                     )
 
-                    data = (symb, stock_price, quant, total, user_email[0], date)
-                    send_buy(DB_PATH, data)
+                    subject = "Stock Transaction Receipt: BUY"
+                    body = (
+                        f"""
+                        Dear User,
+                        
+                        Here is your transaction receipt for your {user_email[0]} account.
+                        
+                        You bought {quant} units of the {symb} stock on {date} 
+                        at a rate of $ {price} per stock unit. Your total expenditure was $ {total}. 
+                            
+                        Thank you.
+                        
+                        Best Regards.
+                        """
+                        .replace('  ', '')
+
+                    )
+                    send_mail(user_email[0], subject, body)
 
                     return redirect(url_for("trade"))
 
@@ -311,16 +381,23 @@ def trade():
                     data = (symb, quant, user_email[0], stock_price)
 
                     if stock.sell("stock", data, DB_PATH):
-                        mail_data = (
-                            symb,
-                            stock_price,
-                            quant,
-                            total,
-                            user_email[0],
-                            date,
+                        subject = "Stock Transaction Receipt: SELL"
+                        body = (
+                            f"""
+                            Dear User,
+                            
+                            Here is your transaction receipt for your {user_email[0]} account.
+                            
+                            You sold {quant} units of the {symb} stock on {date} 
+                            at a rate of $ {price} per stock unit. Your total earning was $ {total}. 
+                                
+                            Thank you.
+                            
+                            Best Regards.
+                            """
+                            .replace('  ', '')
                         )
-                        send_sell(DB_PATH, mail_data)
-                        return redirect(url_for("trade"))
+                        send_mail(user_email[0], subject, body)
 
                     else:
                         return render_template(

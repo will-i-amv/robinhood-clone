@@ -1,0 +1,31 @@
+{% extends "home_layout.html" %}
+
+{% block title %}
+Sign Up
+{% endblock %}
+
+{% block main %}
+<form method="post" id="formy">
+    <input type="radio" name="rg" id="sign-up" checked />
+
+    <label for="sign-up">Sign Up</label>
+
+    <input class="sign-up" type="text" placeholder="Name" name="name" required>
+    <input class="sign-up" type="email" placeholder="Email" name="email"
+        pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$" title="Enter a Valid Email ID" required>
+    <input class="sign-up" type="password" placeholder="Password" name="password"
+        pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
+        title="Must contain at least one number, one uppercase and one lowercase letter, and at least 8 or more characters"
+        required>
+    <input class="sign-up" type="password" placeholder="Repeat Password" name="rpassword"
+        pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
+        title="Must contain at least one number, one uppercase and one lowercase letter, and at least 8 or more characters"
+        required>
+    <ul class="navbar-nav ml-auto mt-2">
+        <li class="nav-item"><a class="nav-link" href="/login">Already registered? Sign In</a></li>
+    </ul>
+
+    <p id="error-msg"> {{error}} </p>
+    <button onclick="signinForm()">Submit</button>
+</form>
+{% endblock %}
