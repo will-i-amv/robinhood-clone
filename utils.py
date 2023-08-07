@@ -61,10 +61,3 @@ def get_current_stock_price(symbol: str) -> float:
     """
     data = pn.data.get(symbol, start=None, end=None)
     return float(data["Close"][0])
-
-
-def reset_password(path: str, email: str):
-    """
-    Sends mail for resetting password to user
-    """
-    send_mail(path, email)

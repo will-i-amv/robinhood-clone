@@ -13,7 +13,8 @@ from flask import Flask, g, redirect, render_template, request, session, url_for
 
 from models import contactus, stock, users
 from sendmail import send_buy, send_sell
-from utils import Currency_Conversion, get_current_stock_price, reset_password
+from utils import Currency_Conversion, get_current_stock_price
+from sendmail import send_mail
 
 
 # Import environment variables
@@ -159,7 +160,7 @@ def recovery():
                 error="The email does not exist."
             )
         else:
-            reset_password(DB_PATH, email)
+            send_mail(DB_PATH, email)
             return render_template(
                 "recovery.html",
                 error="We have sent you a link to reset your password. Check your mailbox",
