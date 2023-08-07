@@ -3,6 +3,7 @@ import datetime as dt
 import glob
 import json
 import os
+import random
 from pathlib import Path
 
 import pandas as pd
@@ -12,7 +13,6 @@ from dotenv import load_dotenv
 from flask import Flask, g, redirect, render_template, request, session, url_for
 
 from models import contactus, stock, users
-from sendmail import send_buy, send_sell
 from utils import Currency_Conversion, get_current_stock_price
 from sendmail import send_mail
 
@@ -160,7 +160,29 @@ def recovery():
                 error="The email does not exist."
             )
         else:
-            send_mail(DB_PATH, email)
+            code = str(random.randint(1000, 9999))
+            subject = "RESET YOUR PASSWORD"
+            body = (
+                f"""
+                Dear User,
+
+                Please Click on the Link Below to reset your password for your {email} account.
+
+                This is your 4 Digit Verification Code: {code}
+
+                Link: http://localhost:8000/reset
+
+                If you didn't ask to reset your password please ignore this email.
+
+                Thank you.
+
+                Best Regards.
+                """
+                .replace('  ', '')
+            )
+            users.add_code(DB_PATH, code, email)
+            send_mail(email, subject, body)
+            
             return render_template(
                 "recovery.html",
                 error="We have sent you a link to reset your password. Check your mailbox",
@@ -314,8 +336,24 @@ def trade():
                         "stock", (date, symb, stock_price, quant, user_email[0]), DB_PATH
                     )
 
-                    data = (symb, stock_price, quant, total, user_email[0], date)
-                    send_buy(DB_PATH, data)
+                    subject = "Stock Transaction Receipt: BUY"
+                    body = (
+                        f"""
+                        Dear User,
+                        
+                        Here is your transaction receipt for your {user_email[0]} account.
+                        
+                        You bought {quant} units of the {symb} stock on {date} 
+                        at a rate of $ {price} per stock unit. Your total expenditure was $ {total}. 
+                            
+                        Thank you.
+                        
+                        Best Regards.
+                        """
+                        .replace('  ', '')
+
+                    )
+                    send_mail(user_email[0], subject, body)
 
                     return redirect(url_for("trade"))
 
@@ -344,16 +382,23 @@ def trade():
                     data = (symb, quant, user_email[0], stock_price)
 
                     if stock.sell("stock", data, DB_PATH):
-                        mail_data = (
-                            symb,
-                            stock_price,
-                            quant,
-                            total,
-                            user_email[0],
-                            date,
+                        subject = "Stock Transaction Receipt: SELL"
+                        body = (
+                            f"""
+                            Dear User,
+                            
+                            Here is your transaction receipt for your {user_email[0]} account.
+                            
+                            You sold {quant} units of the {symb} stock on {date} 
+                            at a rate of $ {price} per stock unit. Your total earning was $ {total}. 
+                                
+                            Thank you.
+                            
+                            Best Regards.
+                            """
+                            .replace('  ', '')
                         )
-                        send_sell(DB_PATH, mail_data)
-                        return redirect(url_for("trade"))
+                        send_mail(user_email[0], subject, body)
 
                     else:
                         return render_template(
