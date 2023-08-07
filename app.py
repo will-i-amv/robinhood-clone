@@ -171,31 +171,28 @@ def reset():
     """
     Reset Password Page
     """
-    if request.method == "POST":
-        pwd = request.form["npassword"]
-        repeat_pwd = request.form["rnpassword"]
-        ver_code = request.form["vcode"]
-        try:
-            ver_code = int(ver_code)
-        except:
-            raise TypeError
+    if not request.method == "POST":
+        return render_template("reset.html")
+    else:
+        passwd = request.form["npassword"]
+        repeat_passwd = request.form["rnpassword"]
+        ver_code = int(request.form["vcode"])
 
-        if pwd and repeat_pwd and ver_code:
-            if pwd == repeat_pwd:
-                if users.check_code(DB_PATH, ver_code):
-                    pwd = users.hash_pwd(pwd)
-                    users.reset_pwd(DB_PATH, pwd, ver_code)
-                    users.reset_code(DB_PATH, ver_code)
-                    return redirect("/")
-                else:
-                    return render_template(
-                        "reset.html", error="Incorrect Verification Code"
-                    )
-            else:
-                return render_template(
-                    "reset.html", error="Password & Retyped Password Not Same"
-                )
-    return render_template("reset.html")
+        if passwd != repeat_passwd:
+            return render_template(
+                "reset.html", 
+                error="The passwords do not match"
+            )
+        elif not users.check_code(DB_PATH, ver_code):
+            return render_template(
+                "reset.html", 
+                error="Incorrect verification code"
+            )
+        else:
+            passwd = users.hash_pwd(passwd)
+            users.reset_pwd(DB_PATH, passwd, ver_code)
+            users.reset_code(DB_PATH, ver_code)
+            return redirect("/")
 
 
 @app.route("/index", methods=["GET", "POST"])
