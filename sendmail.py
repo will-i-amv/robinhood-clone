@@ -2,8 +2,8 @@
 import os
 import random
 import smtplib
-import sqlite3
 
+import requests
 from models.users import add_code
 
 
@@ -20,12 +20,6 @@ def send_mail(path: str, email: str) -> None:
     MAILGUN_EMAIL = os.getenv("MAILGUN_EMAIL")
     MAILGUN_PASSWD = os.getenv("MAILGUN_PASSWD")
 
-    try:
-        server = smtplib.SMTP("smtp.mailgun.org", 587)
-        server.login(MAILGUN_EMAIL, MAILGUN_PASSWD)
-    except:
-        print("Error Connecting To Mail Server")
-
     key = random.randint(1000, 9999)
     add_code(path, key, email)
 
@@ -36,11 +30,18 @@ def send_mail(path: str, email: str) -> None:
     msg = f"Subject: {subject}\n\n{body}"
 
     try:
-        server.sendmail(MAILGUN_EMAIL, email, msg)
+        requests.post(
+            f"https://api.mailgun.net/v3/{MAILGUN_EMAIL}.mailgun.org/messages",
+            data={
+                "from": f"Mailgun Sandbox <postmaster@{MAILGUN_EMAIL}.mailgun.org>",
+                "to": email,
+                "subject": subject,
+                "text": msg,
+            },
+            auth=("api", MAILGUN_PASSWD),
+        )
     except:
         print("Error Sending Mail")
-
-    server.quit()
 
 
 def send_buy(path: str, data: tuple) -> None:
