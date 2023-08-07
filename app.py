@@ -13,8 +13,7 @@ from dotenv import load_dotenv
 from flask import Flask, g, redirect, render_template, request, session, url_for
 
 from models import contactus, stock, users
-from utils import Currency_Conversion, get_current_stock_price
-from sendmail import send_mail
+from utils import Currency_Conversion, get_current_stock_price, send_mail
 
 
 # Import environment variables
